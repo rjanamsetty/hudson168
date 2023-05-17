@@ -7,7 +7,11 @@ import time
 import cv2
 import numpy as np
 
-cameras = {1: ("127.0.0.1", 5000)}
+import utils
+
+cameras = {1: 5001,
+           2: 5002}
+folder_name = 'images'
 
 
 def udp_receive_jpg(host="127.0.0.1", port=5000, formatter=lambda x: x):
@@ -36,17 +40,20 @@ def udp_receive_jpg(host="127.0.0.1", port=5000, formatter=lambda x: x):
         if len(data) < 100:
 
             # If the frame info is valid, receive the rest of the packets
-            frame_info = pickle.loads(data)
-            if frame_info:
-                nums_of_packs = frame_info["packs"]
-                for i in range(nums_of_packs):
-                    data, address = sock.recvfrom(max_length)
-                    if i == 0:
-                        buffer = data
-                    else:
-                        buffer += data
+            try:
+                frame_info = pickle.loads(data)
+                if frame_info:
+                    nums_of_packs = frame_info["packs"]
+                    for i in range(nums_of_packs):
+                        data, address = sock.recvfrom(max_length)
+                        if i == 0:
+                            buffer = data
+                        else:
+                            buffer += data
 
-                yield formatter(buffer)
+                    yield formatter(buffer)
+            except:
+                print(f"can't unpickle")
 
 
 def html_img(buffer):
@@ -73,42 +80,50 @@ def opencv_img(buffer):
     return cv2.flip(frame, 1)
 
 
-def save_frame(host=None, port=None, target=float('inf')):
+def save_frame_udp(host="127.0.0.1", port=5000):
     """
     Saves an OpenCV image frame to a folder called 'images' every minute.
     :return: None
     """
-    # Set the default values
-    if host is None:
-        host = ["127.0.0.1"]
-    if port is None:
-        port = [5000]
-    count = 0
-    folder_name = 'images'
 
-    while True:
-        # Get current time and create a filename
-        timestamp = int(time.time())
+    # Get and save current frame
+    frame = next(udp_receive_jpg(host=host, port=port, formatter=opencv_img))
+    hostname = re.sub(r'\.', '-', host)
+    __save_frame(frame, f"{hostname}_{utils.est_time_now()}")
 
-        # Get the current frame
-        for h, p in zip(host, port):
-            frame = next(udp_receive_jpg(host=h, port=p, formatter=opencv_img))
-            hostname = re.sub(r'\.', '-', h)
-            filename = f"{folder_name}/{hostname}_{timestamp}.jpg"
-            cv2.imwrite(filename, frame, [cv2.IMWRITE_JPEG_QUALITY, 90])
-            print(f"Saved {filename}")
 
-        # Increment the count and break if the target number of frames has been reached
-        count += 1
-        if count == target:
-            break
+def save_frame_local():
+    """
+    Saves an image from the webcam
+    :return: None
+    """
+    # initialize video capture object
+    cap = cv2.VideoCapture(0)
+    ret, frame = cap.read()
+    if not ret: return
+    __save_frame(frame, utils.est_time_now())
 
-        # Wait for 1 minute before saving the next frame
-        time.sleep(60)
+
+def __save_frame(frame, filename):
+    """
+    Saves a given frame with the given file name
+    :param frame: frame to save
+    :param filename: the filename to save as
+    :return: None
+    """
+    name = f"{folder_name}/{filename}.jpg"
+    if cv2.imwrite(name, frame, [cv2.IMWRITE_JPEG_QUALITY, 90]):
+        print(f"Saved {filename}")
+    else:
+        print(f"error saving {filename}")
 
 
 if __name__ == "__main__":
     # If images folder does not exist, create it
-    if not os.path.exists('images'):
-        os.makedirs('images')
-    save_frame()
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
+
+    # Take an image every minute
+    while True:
+        save_frame_local()
+        time.sleep(60)

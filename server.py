@@ -1,8 +1,9 @@
 from flask import Flask, Response, render_template
 
-from video import udp_receive_jpg, html_img, save_frame, cameras
+from video import udp_receive_jpg, html_img, save_frame_udp, cameras
 
 app = Flask(__name__)
+host = "192.168.1.2"
 
 
 @app.route("/video/<int:camera_id>")
@@ -14,7 +15,7 @@ def video(camera_id):
     """
     if camera_id not in cameras:
         return "Invalid camera ID", 400
-    host, port = cameras[camera_id]
+    port = cameras[camera_id]
     return Response(udp_receive_jpg(host=host, port=port, formatter=html_img),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
@@ -29,7 +30,7 @@ def view(camera_id):
     """
     if camera_id not in cameras:
         return "Invalid camera ID", 400
-    link = f"http://127.0.0.1:8080/video/{camera_id}"
+    link = f"http://{host}:8080/video/{camera_id}"
     return render_template('view.html', camera_id=camera_id, link=link)
 
 
@@ -37,8 +38,8 @@ def view(camera_id):
 def save(camera_id):
     if camera_id not in cameras:
         return "Invalid camera ID", 400
-    host, port = cameras[camera_id]
-    save_frame(host=[host], port=[port], target=1)
+    port = cameras[camera_id]
+    save_frame_udp(host=[host], port=[port])
     return "Saved"
 
 
@@ -49,4 +50,4 @@ def home():
 
 if __name__ == "__main__":
     # run install.py to install dependencies and create the database
-    app.run(host="127.0.0.1", port=8080, debug=True)
+    app.run(host=host, port=8080, debug=True)
