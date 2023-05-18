@@ -30,7 +30,7 @@ def view(camera_id):
     """
     if camera_id not in cameras:
         return "Invalid camera ID", 400
-    link = f"http://{host}:8080/video/{camera_id}"
+    link = "http://{host}:8080/video/{camera_id}".format(host=host, camera_id=camera_id)
     return render_template('view.html', camera_id=camera_id, link=link)
 
 

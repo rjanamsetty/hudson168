@@ -26,7 +26,7 @@ def save_lux():
     :return: None
     """
     # If images folder does not exist, create it
-    with open(f"lux/lux_{utils.est_time_now()}.txt", "w") as file:
+    with open("lux/lux_" + utils.est_time_now() + ".txt", "w") as file:
         # Write the integer value to the file
         file.write(str(lux()))
 

@@ -53,7 +53,7 @@ def udp_receive_jpg(host="127.0.0.1", port=5000, formatter=lambda x: x):
 
                     yield formatter(buffer)
             except:
-                print(f"can't unpickle")
+                print("can't unpickle")
 
 
 def html_img(buffer):
@@ -89,7 +89,7 @@ def save_frame_udp(host="127.0.0.1", port=5000):
     # Get and save current frame
     frame = next(udp_receive_jpg(host=host, port=port, formatter=opencv_img))
     hostname = re.sub(r'\.', '-', host)
-    __save_frame(frame, f"{hostname}_{utils.est_time_now()}")
+    __save_frame(frame, "{hostname}_{time}".format(hostname=hostname, time=utils.est_time_now()))
 
 
 def save_frame_local():
@@ -111,11 +111,11 @@ def __save_frame(frame, filename):
     :param filename: the filename to save as
     :return: None
     """
-    name = f"{folder_name}/{filename}.jpg"
+    name = "{folder_name}/{filename}.jpg".format(folder_name=folder_name, filename=filename)
     if cv2.imwrite(name, frame, [cv2.IMWRITE_JPEG_QUALITY, 90]):
-        print(f"Saved {filename}")
+        print("Saved {filename}".format(filename=filename))
     else:
-        print(f"error saving {filename}")
+        print("error saving {filename}".format(filename=filename))
 
 
 if __name__ == "__main__":
