@@ -9,6 +9,7 @@ import numpy as np
 
 from lib import utils
 
+cap = cv2.VideoCapture(0)
 cameras = {1: 5001,
            2: 5002}
 folder_name = 'images'
@@ -98,7 +99,6 @@ def save_frame_local():
     :return: None
     """
     # initialize video capture object
-    cap = cv2.VideoCapture(0)
     ret, frame = cap.read()
     if not ret: return
     __save_frame(frame, utils.est_time_now())
