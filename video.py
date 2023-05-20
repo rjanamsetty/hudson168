@@ -7,7 +7,7 @@ import time
 import cv2
 import numpy as np
 
-import utils
+from lib import utils
 
 cameras = {1: 5001,
            2: 5002}

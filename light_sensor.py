@@ -1,9 +1,7 @@
 import os
 import time
 
-from waveshare_TSL2591 import TSL2591
-
-import utils
+from lib import utils, TSL2591
 
 sensor = TSL2591.TSL2591()
 
